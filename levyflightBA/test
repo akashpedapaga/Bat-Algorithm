@@ -1,0 +1,2 @@
+import opfunu
+dir(opfunu)
