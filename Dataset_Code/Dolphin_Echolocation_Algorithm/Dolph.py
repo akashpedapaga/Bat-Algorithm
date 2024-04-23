@@ -132,7 +132,7 @@ def addEpsilon(A, e):
     return A
 
 # Load dataset
-data = pd.read_csv('diabetes.csv')
+data = pd.read_csv('F:\Local Disk F\MS CS\Academics\Projects\AIProj\Dataset\diabetes.csv')
 
 # Separate features and target variable
 X = data.drop('Outcome', axis=1) 
