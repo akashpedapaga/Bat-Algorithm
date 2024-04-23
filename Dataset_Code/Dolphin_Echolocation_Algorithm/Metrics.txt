@@ -59,3 +59,5 @@
 Dolph.py - Correct Running Code with Preprocessing
 Code_with_plots.py - Correct Running Code without Preprocessing
 Tas2.py - Running Bat Algorith on Dataset - No Preprocessing
+DolphTestfun -  DE Dataset code with plot and Test fns
+DolphTestfunonly -  DE Test functions ran on Dataset - Without plots

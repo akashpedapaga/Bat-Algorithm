@@ -1,12 +1,10 @@
 import pandas as pd
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 import scipy.optimize
-
 
 # Define fitness function
 def Fitness(L, X_train, y_train, classifier):
@@ -106,15 +104,6 @@ def DolphinEcholocation(X_train, y_train, NL, NV, LoopsNumber, Re, Epsilon, mult
         for i in range(NL):
             for j in range(NV):
                 L[i][j] = random.choice(pool[j])
-
-        # Scatter plot of search space exploration
-        x = [i[0] for i in L]
-        y = [i[1] for i in L]
-        plt.scatter(x, y)
-        plt.xlabel('Feature 1')
-        plt.ylabel('Feature 2')
-        plt.title('Search Space Exploration')
-        plt.show()
 
     return BestLocation
 
