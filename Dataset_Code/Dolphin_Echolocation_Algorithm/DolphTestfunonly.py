@@ -121,12 +121,6 @@ def addEpsilon(A, e):
             A[i][j] += e
     return A
 
-# Define the additional functions
-
-def willem(x):
-    return x / x / x / x
-
-
 # Rosenbrock test function
 def FRosenbrock(x):
     return scipy.optimize.rosen(x)
@@ -247,7 +241,6 @@ print("F1 Score:", f1)
 print("Accuracy:", accuracy)
 
 # Test additional functions with input from the dataset
-print("Willem:", willem(X.values))
 print("FRosenbrock:", FRosenbrock(X.values[0]))
 print("rosen:", rosen(X.values[0]))
 print("stub:", stub(X.values[0]))

@@ -132,12 +132,6 @@ def addEpsilon(A, e):
             A[i][j] += e
     return A
 
-# Define the additional functions
-
-def willem(x):
-    return x / x / x / x
-
-
 # Rosenbrock test function
 def FRosenbrock(x):
     return scipy.optimize.rosen(x)
@@ -258,7 +252,6 @@ print("F1 Score:", f1)
 print("Accuracy:", accuracy)
 
 # Test additional functions with input from the dataset
-print("Willem:", willem(X.values))
 print("FRosenbrock:", FRosenbrock(X.values[0]))
 print("rosen:", rosen(X.values[0]))
 print("stub:", stub(X.values[0]))
@@ -268,3 +261,15 @@ print("FGrienwank:", FGrienwank(X.values[0]))
 print("FWeierstrass:", FWeierstrass(X.values[0]))
 print("F8F2:", F8F2(X.values[0]))
 print("FEF8F2:", FEF8F2(X.values[0]))
+
+# Define function to calculate overall fitness value
+def calculate_overall_fitness(X_train, y_train, classifier, best_features):
+    selected_features = [X_train.columns[i] for i in best_features]
+    X_train_selected = X_train[selected_features]
+    X_test_selected = X_test[selected_features]
+    classifier.fit(X_train_selected, y_train)
+    fitness_value = classifier.score(X_test_selected, y_test)
+    print("Overall Fitness Value:", fitness_value)
+
+# Run the function to calculate and print the overall fitness value
+calculate_overall_fitness(X_train, y_train, classifier, best_features)
