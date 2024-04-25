@@ -1,8 +1,8 @@
+# Import necessary libraries
 import random
 
 import numpy as np
 import pandas as pd
-import pca
 import scipy.optimize
 from scipy.stats import norm
 from sklearn.metrics import (
@@ -16,6 +16,7 @@ from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 
+# Define the Bat class for the bat algorithm optimization
 class Bat:
     def __init__(
         self,
@@ -29,59 +30,39 @@ class Bat:
         lower_bound,
         upper_bound,
         function,
-        use_pca=True,
         levy=False,
         seed=0,
         alpha=1,
         gamma=1,
     ):
-        # Number of dimensions
+        # Initialize parameters for the bat algorithm
         self.d = d
-        # Population size
         self.pop = pop
-        # Generations
         self.numOfGenerations = numOfGenerations
-        # Loudness and alpha parameter (0 < a < 1)
         self.A = np.array([a] * pop)
         self.alpha = alpha
-        # Pulse rate and gamma parameter (y > 0)
         self.R = np.array([r] * pop)
         self.gamma = gamma
-        # (Min/Max) frequency
         self.Q = np.zeros(self.pop)
         self.q_min = q_min
         self.q_max = q_max
-        # Domain bounds
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
-
         self.levy = levy
-        self.use_pca = use_pca
-        if use_pca:
-            self.PCA = pca.PCA()
-
-        # Initialise fitness and solutions
+        self.func = function
         self.f_min = np.inf
         self.solutions = np.zeros((self.pop, self.d))
-        self.pop_fitness = np.zeros(self.pop)  # fitness of population
-        self.best = np.zeros(self.d)  # best solution
-
-        # Random number generator
+        self.pop_fitness = np.zeros(self.pop)
+        self.best = np.zeros(self.d)
         self.rng = np.random.default_rng(seed)
-
-        # Velocity
         self.V = np.zeros((self.pop, self.d))
-
-        # Optimisation/fitness function
-        self.func = function
-
-        # History (for plots)
         self.best_history = []
         self.min_val_history = []
         self.loudness_history = []
         self.pulse_rate_history = []
         self.frequency_history = []
 
+    # Function to find the best bat
     def find_best_bat(self):
         j = 0
         for i in range(self.pop):
@@ -91,6 +72,7 @@ class Bat:
             self.best[i] = self.solutions[j][i]
         self.f_min = self.pop_fitness[j]
 
+    # Function to initialize bats
     def init_bats(self):
         for i in range(self.pop):
             for j in range(self.d):
@@ -101,19 +83,22 @@ class Bat:
 
         self.find_best_bat()
 
+    # Function to update frequency
     def update_frequency(self, i):
         self.Q[i] = self.q_min + (self.q_max - self.q_min) * self.rng.uniform(
             0, 1
         )
 
+    # Function to update loudness
     def update_loudness(self, i):
         self.A[i] *= self.alpha
 
+    # Function to update pulse rate
     def update_pulse_rate(self, i, t):
         self.R[i] = self.gamma * (1 - np.exp(-self.gamma * t))
 
+    # Function for global search using bat algorithm
     def global_search(self, X, i):
-        """Update velocity and location based on Eq.3 and Eq.4 in [1]"""
         for j in range(self.d):
             self.V[i][j] = (
                 self.V[i][j]
@@ -125,29 +110,7 @@ class Bat:
                 self.upper_bound,
             )
 
-    def levy_rejection(self):
-        x = self.rng.uniform(0, 1)
-        y = self.rng.uniform(0, 1.5)  # PDF maximum peak at x=1/3 --> y~1.45
-        fx = np.sqrt(1 / (2 * np.pi)) * np.exp(-1 / (2 * x)) / (x**1.5)  # PDF
-        while y < fx:
-            x = self.rng.uniform(0, 1)
-            y = self.rng.uniform(
-                0, 1.5
-            )  # PDF maximum peak at x=1/3 --> y~1.45
-            fx = (
-                np.sqrt(1 / (2 * np.pi)) * np.exp(-1 / (2 * x)) / (x**1.5)
-            )  # PDF
-        return x
-
-    def my_levy(self, u, c=1.0, mu=0.0):
-        """
-        Arguments:
-        u: a uniform[0,1) random number
-        c: scale parameter for Levy distribution (defaults to 1)
-        mu: location parameter (offset) for Levy (defaults to 0)
-        """
-        return mu + c / (2 * norm.ppf(1.0 - u) ** 2)
-
+    # Function for Levy flight
     def levy_flight(self, X, i):
         for j in range(self.d):
             X[i][j] = np.clip(
@@ -158,6 +121,7 @@ class Bat:
                 self.upper_bound,
             )
 
+    # Function to perform bat movement
     def move_bats(self, X, t):
         for i in range(self.pop):
 
@@ -168,17 +132,9 @@ class Bat:
             else:
                 self.global_search(X, i)
 
-            if self.use_pca:
-                X = self.PCA.replace_principal_individuals(
-                    X, self.lower_bound, self.upper_bound
-                )
-
-            # Update positions with local search if random sample is greater than pulse rate
             if self.rng.random() > self.R[i]:
                 for j in range(self.d):
-                    # Original bat paper
                     alpha = 0.001
-                    # Optimisation, average loudness
                     alpha = np.mean(self.A)
                     X[i][j] = np.clip(
                         self.best[j] + alpha * self.rng.normal(0, 1),
@@ -197,12 +153,12 @@ class Bat:
                 self.update_loudness(i)
                 self.update_pulse_rate(i, t)
 
-            # Re-evaluate best bat
             if f_new < self.f_min:
                 for j in range(self.d):
                     self.best[j] = X[i][j]
                 self.f_min = f_new
 
+    # Function to keep history for plots
     def keep_history(self):
         self.best_history.append(self.best)
         self.min_val_history.append(self.f_min)
@@ -210,8 +166,8 @@ class Bat:
         self.pulse_rate_history.append(np.mean(self.R))
         self.frequency_history.append(np.mean(self.Q))
 
+    # Function to run bat algorithm
     def run_bats(self):
-        """Actual run function, returns dictionary with results."""
         X = np.zeros((self.pop, self.d))
 
         self.init_bats()
@@ -220,54 +176,35 @@ class Bat:
             self.move_bats(X, t)
             self.keep_history()
 
-        history = {}
-        history.update(
-            {
-                "best": self.best_history,
-                "min_val": self.min_val_history,
-                "loudness": self.loudness_history,
-                "pulserate": self.pulse_rate_history,
-                "frequency": self.frequency_history,
-            }
-        )
+        history = {
+            "best": self.best_history,
+            "min_val": self.min_val_history,
+            "loudness": self.loudness_history,
+            "pulserate": self.pulse_rate_history,
+            "frequency": self.frequency_history,
+        }
 
-        d = {}
-        d.update(
-            {
-                "best": self.best,
-                "final_fitness": self.f_min,
-                "history": history,
-            }
-        )
+        result = {
+            "best": self.best,
+            "final_fitness": self.f_min,
+            "history": history,
+        }
 
-        return d
+        return result
 
 
 def run(function, lb, ub, generations):
-    alpha_gamma = 0.95
     algorithm = Bat(
-        # Dimension
         100,
-        # Population
         100,
-        # Generations
         generations,
-        # Loudness
         0.9,
-        # Pulse rate
         0.9,
-        # Min. Freq.
         0.0,
-        # Max. Freq.
         5.0,
-        # Lower bound
         lb,
-        # Upper bound
         ub,
         function,
-        alpha=0.99,
-        gamma=0.9,
-        use_pca=pca,
         levy=True,
     )
     return_dict = algorithm.run_bats()
@@ -277,18 +214,16 @@ def run(function, lb, ub, generations):
     return return_dict
 
 
-# Define the additional functions
+# Define additional functions for benchmarking
 def willem(x):
     return x / x / x / x
 
 
-# Rosenbrock test function
 def FRosenbrock(x):
     return scipy.optimize.rosen(x)
 
 
 def rosen(x):
-    """The Rosenbrock function"""
     return sum(100.0 * (x[1:] - x[:-1] ** 2.0) ** 2.0 + (1 - x[:-1]) ** 2.0)
 
 
@@ -299,34 +234,20 @@ def stub(x):
     return value
 
 
-# Sphere test function
 def FSphere(x):
-    """
-    Sphere function
-    range: [np.NINF, np.inf]
-    """
     return (x**2).sum()
 
 
-# Rastrigin test function
 def FRastrigin(x):
-    """
-    Rastrigin's function
-    [-5.12, 5.12]
-    """
     return np.sum(x**2 - 10.0 * np.cos(2.0 * np.pi * x) + 10)
 
 
-# Griewank test function
 def FGrienwank(x):
-    """Griewank's function"""
     i = np.sqrt(np.arange(x.shape[0]) + 1.0)
     return np.sum(x**2) / 4000.0 - np.prod(np.cos(x / i)) + 1.0
 
 
-# Weierstrass test function
 def FWeierstrass(x):
-    """Weierstrass's function"""
     alpha = 0.5
     beta = 3.0
     kmax = 20
@@ -348,7 +269,6 @@ def F8F2(x):
     return 1.0 + (f2**2) / 4000.0 - np.cos(f2)
 
 
-# FEF8F2 function
 def FEF8F2(x):
     D = x.shape[0]
     f = 0
@@ -358,12 +278,12 @@ def FEF8F2(x):
     return f
 
 
+# Read the dataset
 data = pd.read_csv("C:\\Users\\diabetes.csv")
 
 # Separate features and target variable
 X = data.drop("Outcome", axis=1)
 y = data["Outcome"]
-
 
 # Split the dataset into train and test sets
 X_train, X_test, y_train, y_test = train_test_split(
@@ -377,37 +297,20 @@ X_train = pd.DataFrame(
     X_train_scaled, columns=X.columns
 )  # Convert X_train_scaled back to DataFrame
 
-# Define DNN classifier
+# Define a neural network classifier
 from sklearn.neural_network import MLPClassifier
 
 classifier = MLPClassifier(hidden_layer_sizes=(100, 50), max_iter=1000)
 
+# Run the bat algorithm with Rosenbrock function as benchmark
 run(
     rosen,  # Function to benchmark
     -100,  # Lower bound of problem
     100,  # Upper bound
     200,  # Generations
 )
-# Evaluate performance
-"""selected_features = [X_train.columns[i] for i in best_features]
-X_train_selected = X_train[selected_features]
-X_test_selected = X_test[selected_features]
-classifier.fit(X_train_selected, y_train)
-y_pred = classifier.predict(X_test_selected)
-
-# Calculate metrics
-precision = precision_score(y_test, y_pred, zero_division=1.0)
-recall = recall_score(y_test, y_pred)
-f1 = f1_score(y_test, y_pred)
-accuracy = accuracy_score(y_test, y_pred)
-
-print("Precision:", precision)
-print("Recall:", recall)
-print("F1 Score:", f1)
-print("Accuracy:", accuracy)"""
 
 # Test additional functions with input from the dataset
-# print("Willem:", willem(X.values))
 print("FRosenbrock:", FRosenbrock(X.values[0]))
 print("rosen:", rosen(X.values[0]))
 print("stub:", stub(X.values[0]))
