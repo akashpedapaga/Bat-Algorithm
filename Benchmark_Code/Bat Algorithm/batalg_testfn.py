@@ -1,18 +1,30 @@
 from gettext import install
+
 import numpy as np
+
 
 def objective_function(x):
     return np.sum(x**2)
 
+
 import numpy as np
+
 
 def initialize_bats(pop_size, dim):
     return np.random.rand(pop_size, dim)
 
+
 def update_position(position, velocity):
     return position + velocity
 
-def bat_algorithm(objective_function, pop_size=10, max_iterations=100, loudness=0.5, pulse_rate=0.5):
+
+def bat_algorithm(
+    objective_function,
+    pop_size=10,
+    max_iterations=100,
+    loudness=0.5,
+    pulse_rate=0.5,
+):
     # Get dimensionality from the objective function
     dim = objective_function.__code__.co_argcount
 
@@ -33,7 +45,9 @@ def bat_algorithm(objective_function, pop_size=10, max_iterations=100, loudness=
 
         for i in range(pop_size):
             frequency = 0.5
-            velocities[i] = velocities[i] + (bats[i] - best_solution) * frequency
+            velocities[i] = (
+                velocities[i] + (bats[i] - best_solution) * frequency
+            )
             bats[i] = update_position(bats[i], velocities[i])
 
             if np.random.rand() > current_loudness:
@@ -50,6 +64,7 @@ def bat_algorithm(objective_function, pop_size=10, max_iterations=100, loudness=
 
     return best_solution, fitness[best_index]
 
+
 # Example usage
 pop_size = 50
 max_iterations = 25
@@ -57,7 +72,9 @@ loudness = 0.5
 pulse_rate = 0.5
 
 # Run the bat algorithm with the provided objective function
-best_solution, best_fitness = bat_algorithm(objective_function, pop_size, max_iterations, loudness, pulse_rate)
+best_solution, best_fitness = bat_algorithm(
+    objective_function, pop_size, max_iterations, loudness, pulse_rate
+)
 
 print("Best Solution:", best_solution)
 print("Best Fitness:", best_fitness)

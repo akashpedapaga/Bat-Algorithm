@@ -16,24 +16,24 @@ from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 
-# Define the Bat class for the bat algorithm optimization
+# Define the Bat class for the bat algorithm optimization - levy bat
 class Bat:
     def __init__(
         self,
-        d,
-        pop,
+        d,  # Number of dimensions in the search space.
+        pop,  # Population size
         numOfGenerations,
-        a,
-        r,
-        q_min,
-        q_max,
-        lower_bound,
-        upper_bound,
+        a,  # Loudness parameter
+        r,  # Pulse rate parameter
+        q_min,  # Minimum frequency of emitted pulses.
+        q_max,  # Maximum frequency of emitted pulses
+        lower_bound,  # Lower bound of the search space for each dimension.
+        upper_bound,  # Upper bound of the search space for each dimension
         function,
-        levy=False,
+        levy=False,  # boolean parameter
         seed=0,
-        alpha=1,
-        gamma=1,
+        alpha=1,  # Parameter controlling the update of loudness during the search process
+        gamma=1,  # Parameter controlling the update of pulse rate during the search process
     ):
         # Initialize parameters for the bat algorithm
         self.d = d
